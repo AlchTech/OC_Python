@@ -1,13 +1,9 @@
 from base64 import encode
-from operator import ne
 from pydoc import describe
-import shutil
 from webbrowser import get
 import requests
 from bs4 import BeautifulSoup
 import csv
-import os
-import urllib.request
 
 class Categories:
     def __init__(self, url):
@@ -106,24 +102,6 @@ class Book_description:
                     review_rating,
                     image_url,
                     ]
-
-                
-                if not os.path.exists("images/" + key):
-                    os.makedirs("images/" + key)
-                
-                if image_url != "http://books.toscrape.com/media/images":
-                    print(image_url)
-                name_image ="images/" + key + "/" + title + ".jpg"
-                name_image = name_image.replace(" ", "_")
-                try: 
-                    urllib.request.urlretrieve(image_url, name_image)
-                    if not urllib.request.urlretrieve(image_url, name_image):
-                        
-                        next
-                except Exception as e:
-                    print(e)
-                    next
-
                 list_description.append(data)
             self.description_csv(key, list_description)
 
@@ -133,14 +111,6 @@ class Book_description:
                 
             
     def description_csv(self, name_category, data):
-        
-        # SI DOSSIER CSV EXISTE DEJA NE FAIRE RIEN
-        if os.path.exists(os.path.join(os.getcwd(), 'csv')):
-            pass
-        else:
-            os.mkdir(os.path.join(os.getcwd(), 'csv'))
-        
-        
         fieldnames = [
             'product_page_url',
             'universal_product_code',
@@ -157,14 +127,9 @@ class Book_description:
             
         # ECRIRE DANS LE FICHIER CSV EN UTF-8
         with open(name_category + '.csv', 'w', encoding='utf-8') as csv_file:
-            writer = csv.writer(csv_file, delimiter=',')
+            writer = csv.writer(csv_file)
             writer.writerow(fieldnames)
             for row in data:
                 writer.writerow(row)
-        
-        source = r'./' + name_category + '.csv'
-        destination = r'./csv/' + name_category + '.csv'
-        shutil.move(source,destination)
- 
                 
 Book_description(name_url_book).get_description()
