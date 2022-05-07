@@ -28,40 +28,47 @@ class Books:
     def __init__(self, url_categories):
         self.dictionary_categorie = url_categories
 
-        
+    
+    def pagination(self):
+        new_dictionary = {}
+        for key, value in self.dictionary_categorie.items():
+            if key == 'Books':
+                print("Ignore la categorie Books")
+            else:
+                url_tmp = []
+                url_tmp.append(value)
+                for url in url_tmp:
+                    get_next_page = requests.get(url)
+                    get_soup_page = BeautifulSoup(get_next_page.content, 'html.parser')
+                    if get_soup_page.findAll('li', {'class': 'next'}) != []:
+                        next = get_soup_page.findAll('li', {'class': 'next'})[0].find('a').get('href')
+                        next = value.replace("index.html", next)
+                        url_tmp.append(next)
+                        
+                new_dictionary[key] = url_tmp
+        return new_dictionary
+
         
     def get_books(self):
-        increment = 0
+        pagination = self.pagination()
         dictionary_books = {}
-        if "Books" in self.dictionary_categorie.keys():
-            del self.dictionary_categorie["Books"]
-            
-        for key, value in self.dictionary_categorie.items():
-            list_books_by_category = []
-            get_name = key
-            get_url = value
-            get_page = requests.get(get_url) or requests.get(self.get_next)
-            get_page_soup = BeautifulSoup(get_page.content, 'html.parser')
-            get_url_book = get_page_soup.findAll('h3')
-            increment += 1
-            for book in get_url_book:
-                books_url = book.find('a').get('href')
-                if books_url.startswith('../../'):
-                    books_url = books_url[6:]
-                if books_url.startswith('../'):
-                    books_url = books_url[3:]
-                books_url = "http://books.toscrape.com/catalogue/" + books_url
-                list_books_by_category.append(books_url)
-            dictionary_books[get_name] = list_books_by_category
-
-            # PAGINATION
-            # if get_page_soup.findAll('li', {'class': 'next'}) != []:
-            #     while get_page_soup.findAll('li', {'class': 'next'}) != []:
-            #         get_next = get_page_soup.findAll('li', {'class': 'next'})[0].find('a').get('href')
-            #         get_url = get_url[:-10]
-            #         self.get_next = get_url  + get_next
-            #         print(self.get_next)
-        return dictionary_books                
+        for key, value in pagination.items():
+            for page in value:
+                list_books_by_category = []
+                get_page = requests.get(page)
+                get_soup = BeautifulSoup(get_page.content, 'html.parser')
+                get_url_book = get_soup.findAll('h3')
+                for a in get_url_book:
+                    a = a.find('a').get('href')
+                    if a.startswith('../../'):
+                        a = a[6:]
+                    if a.startswith('../'):
+                        a = a[3:]
+                    a =  "http://books.toscrape.com/catalogue/" + a
+                    list_books_by_category.append(a)
+                dictionary_books[key] = list_books_by_category
+                
+        return dictionary_books          
             
 name_url_book = Books(name_url_categories).get_books()
 
@@ -70,96 +77,97 @@ class Book_description:
     
     def __init__(self, url_book):
         self.url_book = url_book
-        
 
     def get_description(self):
-
         for key, value in self.url_book.items():
-            list_description = []
+#             list_description = []
             for book in value:
                 get_page = requests.get(book)
                 get_soup = BeautifulSoup(get_page.content, 'html.parser')
                 select_info = get_soup.findAll('td')
-            
+                
                 product_page_url = book
                 universal_product_code= select_info[0].get_text().strip()
                 title = get_soup.findAll('h1')[0].get_text().strip()
+                print(title)
                 price_excluding_tax = select_info[2].get_text().strip().split('\n')
-                price_including_tax = select_info[3].get_text().strip().split('\n')
-                number_available = select_info[5].get_text().strip().split('\n')
-                product_description = get_soup.findAll('p')[3].get_text().strip()
-                category =  get_soup.findAll('a')[3].get_text().strip()
-                review_rating = select_info[6].get_text().strip().split('\n')
-                image_url = get_soup.findAll('img')[0].get('src')
-                image_url = "http://books.toscrape.com/media/" + image_url[12:]
+                print(price_excluding_tax)
+#                 price_including_tax = select_info[3].get_text().strip().split('\n')
+#                 number_available = select_info[5].get_text().strip().split('\n')
+#                 product_description = get_soup.findAll('p')[3].get_text().strip()
+#                 category =  get_soup.findAll('a')[3].get_text().strip()
+#                 review_rating = select_info[6].get_text().strip().split('\n')
+#                 image_url = get_soup.findAll('img')[0].get('src')
+#                 image_url = "http://books.toscrape.com/media/" + image_url[12:]
                 
-                data = [
-                    product_page_url,
-                    universal_product_code,
-                    title,
-                    price_including_tax,
-                    price_excluding_tax,
-                    number_available,
-                    product_description,
-                    category,
-                    review_rating,
-                    image_url,
-                    ]
+#                 data = [
+#                     product_page_url,
+#                     universal_product_code,
+#                     title,
+#                     price_including_tax,
+#                     price_excluding_tax,
+#                     number_available,
+#                     product_description,
+#                     category,
+#                     review_rating,
+#                     image_url,
+#                     ]
                 
-                if not os.path.exists("images/" + key):
-                    os.makedirs("images/" + key)
+#                 if not os.path.exists("images/" + key):
+#                     os.makedirs("images/" + key)
                 
-                if image_url != "http://books.toscrape.com/media/images":
-                    print(image_url)
-                name_image ="images/" + key + "/" + title + ".jpg"
-                name_image = name_image.replace(" ", "_")
-                try: 
-                    urllib.request.urlretrieve(image_url, name_image)
-                    if not urllib.request.urlretrieve(image_url, name_image):
-                        next
-                except Exception as e:
-                    print(e)
-                    next
-
-                    
-                    
-                        
-                list_description.append(data)
-            self.description_csv(key, list_description)
+#                 name_image ="images/" + key + "/" + title + ".jpg"
+#                 name_image = name_image.replace(" ", "_")
+                
+#                 print(image_url)
+#                 try: 
+#                     urllib.request.urlretrieve(image_url, name_image)
+#                     if not urllib.request.urlretrieve(image_url, name_image):
+#                         next
+#                 except Exception as e:
+#                     print(e)
+#                     next    
+#                 list_description.append(data)
+#             self.description_csv(key, list_description)
 
         
 
       
                 
             
-    def description_csv(self, name_category, data):
-        fieldnames = [
-            'product_page_url',
-            'universal_product_code',
-            'title',
-            'price_including_tax',
-            'price_excluding_tax',
-            'number_available', 
-            'product_description', 
-            'category', 
-            'review_rating', 
-            'image_url'
-            ]
+#     def description_csv(self, name_category, data):
+#         fieldnames = [
+#             'product_page_url',
+#             'universal_product_code',
+#             'title',
+#             'price_including_tax',
+#             'price_excluding_tax',
+#             'number_available', 
+#             'product_description', 
+#             'category', 
+#             'review_rating', 
+#             'image_url'
+#             ]
+
+#         with open(name_category + '.csv', 'w', encoding='utf-8') as csvfile:
+#             writer = csv.writer(csvfile, delimiter=',')
+#             writer.writerow(fieldnames)
+#             for row in data:
+#                 writer.writerow(row)
         
             
-        # SI DOSSIER EXISTE DEJA NE FAIRE RIEN
-        if  os.path.exists("./csv/" + name_category):
-            os.mkdir("./csv/" + name_category)
+#         # SI DOSSIER EXISTE DEJA NE FAIRE RIEN
+#         os.makedirs("./csv/" + name_category, exist_ok=False)
                 
-        with open(name_category + '.csv', 'w', encoding='utf-8') as csv_file:
-            writer = csv.writer(csv_file, delimiter=',')
-            writer.writerow(fieldnames)
-            for row in data:
-                writer.writerow(row)
+#         with open(name_category + '.csv', 'w', encoding='utf-8') as csv_file:
+#             writer = csv.writer(csv_file, delimiter=',')
+#             writer.writerow(fieldnames)
+#             for row in data:
+#                 writer.writerow(row)
 
-        source = r'./' + name_category + '.csv'
-        destination = r'./csv/' + name_category + '.csv'
 
-        shutil.move(source,destination)
+#         source = r'./' + name_category + '.csv'
+#         destination = r'./csv/' + name_category
+#         shutil.move(source,destination)
                 
 Book_description(name_url_book).get_description()
