@@ -80,7 +80,7 @@ class Book_description:
 
     def get_description(self):
         for key, value in self.url_book.items():
-#             list_description = []
+            list_description = []
             for book in value:
                 get_page = requests.get(book)
                 get_soup = BeautifulSoup(get_page.content, 'html.parser')
@@ -89,85 +89,74 @@ class Book_description:
                 product_page_url = book
                 universal_product_code= select_info[0].get_text().strip()
                 title = get_soup.findAll('h1')[0].get_text().strip()
-                print(title)
                 price_excluding_tax = select_info[2].get_text().strip().split('\n')
-                print(price_excluding_tax)
-#                 price_including_tax = select_info[3].get_text().strip().split('\n')
-#                 number_available = select_info[5].get_text().strip().split('\n')
-#                 product_description = get_soup.findAll('p')[3].get_text().strip()
-#                 category =  get_soup.findAll('a')[3].get_text().strip()
-#                 review_rating = select_info[6].get_text().strip().split('\n')
-#                 image_url = get_soup.findAll('img')[0].get('src')
-#                 image_url = "http://books.toscrape.com/media/" + image_url[12:]
+                price_including_tax = select_info[3].get_text().strip().split('\n')
+                number_available = select_info[5].get_text().strip().split('\n')
+                product_description = get_soup.findAll('p')[3].get_text().strip()
+                category =  get_soup.findAll('a')[3].get_text().strip()
+                review_rating = select_info[6].get_text().strip().split('\n')
+                image_url = get_soup.findAll('img')[0].get('src')
+                image_url = "http://books.toscrape.com/media/" + image_url[12:]
+                print(image_url)
                 
-#                 data = [
-#                     product_page_url,
-#                     universal_product_code,
-#                     title,
-#                     price_including_tax,
-#                     price_excluding_tax,
-#                     number_available,
-#                     product_description,
-#                     category,
-#                     review_rating,
-#                     image_url,
-#                     ]
+                data = [
+                    product_page_url,
+                    universal_product_code,
+                    title,
+                    price_including_tax,
+                    price_excluding_tax,
+                    number_available,
+                    product_description,
+                    category,
+                    review_rating,
+                    image_url,
+                    ]
                 
-#                 if not os.path.exists("images/" + key):
-#                     os.makedirs("images/" + key)
                 
-#                 name_image ="images/" + key + "/" + title + ".jpg"
-#                 name_image = name_image.replace(" ", "_")
-                
-#                 print(image_url)
-#                 try: 
-#                     urllib.request.urlretrieve(image_url, name_image)
-#                     if not urllib.request.urlretrieve(image_url, name_image):
-#                         next
-#                 except Exception as e:
-#                     print(e)
-#                     next    
-#                 list_description.append(data)
-#             self.description_csv(key, list_description)
+                os.makedirs('./images/' + key, exist_ok=True)
+                urllib.request.urlretrieve(image_url, "./images/" + image_url[-12:])
+                shutil.move("./images/" + image_url[-12:], "./images/" + key)
+                # name_image = key + "_" + title + ".jpg"
+                # urllib.request.urlretrieve(image_url, name_image)
+                # # SI name_image ne contient pas .jpg print(image_url)
+                # if name_image.endswith(".jpg"):
+                #     print(image_url)
+                # shutil.move(name_image, './images/') 
+                    
+                    
+                    
+                list_description.append(data)
+            self.description_csv(key, list_description)
 
         
 
       
                 
             
-#     def description_csv(self, name_category, data):
-#         fieldnames = [
-#             'product_page_url',
-#             'universal_product_code',
-#             'title',
-#             'price_including_tax',
-#             'price_excluding_tax',
-#             'number_available', 
-#             'product_description', 
-#             'category', 
-#             'review_rating', 
-#             'image_url'
-#             ]
+    def description_csv(self, name_category, data):
+        fieldnames = [
+            'product_page_url',
+            'universal_product_code',
+            'title',
+            'price_including_tax',
+            'price_excluding_tax',
+            'number_available', 
+            'product_description', 
+            'category', 
+            'review_rating', 
+            'image_url'
+            ]
 
-#         with open(name_category + '.csv', 'w', encoding='utf-8') as csvfile:
-#             writer = csv.writer(csvfile, delimiter=',')
-#             writer.writerow(fieldnames)
-#             for row in data:
-#                 writer.writerow(row)
+        with open(name_category + '.csv', 'w', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(fieldnames)
+            for row in data:
+                writer.writerow(row)
         
             
-#         # SI DOSSIER EXISTE DEJA NE FAIRE RIEN
-#         os.makedirs("./csv/" + name_category, exist_ok=False)
-                
-#         with open(name_category + '.csv', 'w', encoding='utf-8') as csv_file:
-#             writer = csv.writer(csv_file, delimiter=',')
-#             writer.writerow(fieldnames)
-#             for row in data:
-#                 writer.writerow(row)
-
-
-#         source = r'./' + name_category + '.csv'
-#         destination = r'./csv/' + name_category
-#         shutil.move(source,destination)
+        os.makedirs("./csv/" + name_category, exist_ok=False)
+        source = r'./' + name_category + '.csv'
+        destination = r'./csv/' + name_category
+        shutil.move(source,destination)
                 
 Book_description(name_url_book).get_description()
