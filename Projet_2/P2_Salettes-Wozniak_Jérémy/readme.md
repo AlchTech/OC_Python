@@ -38,3 +38,8 @@ Installer les modules nécessaires avec la commande suivante:
 ```code
 pip install -r requirements.txt               // Installer les modules nécessaires
 ```
+
+Executez le programme
+```code
+py Book_description.py
+```
